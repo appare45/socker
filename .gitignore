@@ -1,2 +1,3 @@
-/target
-/test-container
+app/target
+test-container/rootfs
+test-container/script
