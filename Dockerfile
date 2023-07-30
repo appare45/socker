@@ -1,7 +1,7 @@
-FROM debian:stable-slim 
+FROM rust:latest
 
 
-COPY ./test-container /test-container
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-
+COPY ./test-container /app
+COPY ./app /app
 WORKDIR /app
+RUN cargo install --path .

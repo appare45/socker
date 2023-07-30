@@ -5,10 +5,6 @@ services:
     command: bash
     stdin_open: true
     tty: true
-    volumes:
-      - type: bind
-        source: .
-        target: /app
   test-container:
     build: ./test-container
     command: /bin/bash
