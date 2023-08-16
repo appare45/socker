@@ -1,7 +1,20 @@
-use nix::unistd::{getpid, getppid};
+use psutil::process;
 pub fn ps() {
-    let current_pid = getpid();
-    let current_ppid = getppid();
-    println!("Current PID is {}", current_pid.as_raw());
-    println!("Current PPID is {}", current_ppid.as_raw())
+    let process = process::processes();
+    match &process.is_err() {
+       true => {
+           panic!("Unable to get process list")
+       } 
+       _ => {}
+    } 
+    for p in &process.unwrap() {
+       match p.is_err() {
+           true => {
+            println!("Unable to get one of process information: {:?}", p.as_ref().err())
+           }
+           _ => {
+            println!("name: {}", p.as_ref().unwrap().name().unwrap())
+           }
+       } 
+    }
 }
