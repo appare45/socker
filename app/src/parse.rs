@@ -95,17 +95,17 @@ struct RLimits {
 #[derive(Deserialize)]
 struct Process {
     terminal: Option<bool>,
-    consoleSize: Option<ConsoleSize>,
+    console_size: Option<ConsoleSize>,
     cwd: String,
     env: Option<Vec<String>>,
     args: Option<Vec<String>>,
-    commandLine: Option<String>,
+    command_line: Option<String>,
     rlimits: Option<RLimits>, // Only supported on POSIX
 }
 
 #[derive(Deserialize)]
 pub struct Config {
-    pub ociVersion: String,
+    pub oci_version: String,
     root: Option<Root>,
 }
 
