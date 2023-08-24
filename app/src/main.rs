@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 use parse::Config;
+use ps::ps;
 
 mod parse;
 mod ps;
@@ -13,7 +14,10 @@ struct CLI {
 #[derive(Subcommand)]
 enum Commands {
     OciVersion,
-    Ps,
+    Ps {
+        #[arg(short)]
+        all: Option<bool>,
+    },
 }
 
 fn main() {
@@ -24,9 +28,12 @@ fn main() {
             let config = Config::new();
             println!("{}", config.oci_version);
         }
-        Some(Commands::Ps) => {
-            ps::ps();
-        }
+        Some(Commands::Ps { all }) => match all {
+            Some(true) => ps(true),
+            _ => {
+                ps(false);
+            }
+        },
         _ => {}
     }
 }

@@ -1,9 +1,9 @@
+#![allow(dead_code)]
 use serde::Deserialize;
 use serde_json;
 use std::fs::File;
 use std::io::BufReader;
 
-// https://github.com/opencontainers/runtime-spec/blob/main/config.md
 
 #[derive(Deserialize, Debug)]
 struct Root {
