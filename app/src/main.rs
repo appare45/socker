@@ -1,7 +1,9 @@
 use clap::{Parser, Subcommand};
+use clone::clone;
 use parse::Config;
 use ps::ps;
 
+mod clone;
 mod parse;
 mod ps;
 
@@ -13,6 +15,7 @@ struct CLI {
 
 #[derive(Subcommand)]
 enum Commands {
+    Clone,
     OciVersion,
     Ps {
         #[arg(short)]
@@ -34,6 +37,11 @@ fn main() {
                 ps(false);
             }
         },
-        _ => {}
+        Some(Commands::Clone) => {
+            clone();
+        }
+        _ => {
+            eprint!("Unexpected command")
+        }
     }
 }

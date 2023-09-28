@@ -13,7 +13,7 @@ pub fn ps(is_all: bool) {
         match p {
             Err(e) => match is_all {
                 true => {
-                    println!("Unable to get one of process information: {:?}", e)
+                    eprintln!("Unable to get one of process information: {:?}", e)
                 }
                 _ => {}
             },
