@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use clone::clone;
+use clone::new_uts;
 use parse::Config;
 use ps::ps;
 
@@ -38,7 +38,7 @@ fn main() {
             }
         },
         Some(Commands::Clone) => {
-            clone();
+            new_uts();
         }
         _ => {
             eprint!("Unexpected command")
