@@ -1,12 +1,11 @@
 use nix::{
+    sys::wait::waitpid,
     libc::{self, SIGCHLD},
-    sched::{clone, unshare, CloneFlags},
+    sched::{clone, CloneFlags},
     unistd::execvp,
 };
 use std::ffi::CString;
 pub fn new_uts() {
-    unshare(CloneFlags::CLONE_NEWUTS).expect("Failed to create namespace");
-
     let closure = || {
         let cmd = CString::new("bash").unwrap();
         let args = vec![CString::new("containered bash").unwrap()];
@@ -26,5 +25,8 @@ pub fn new_uts() {
 
     let pid = clone(cb, &mut stack, flags, Some(signal));
     println!("PID: {:?}", pid);
-    print!("closure -> {}", closure());
+
+    while let Ok(status) = waitpid(None, None) {
+        println!("Exit Status: {:?}", status)
+    }
 }
