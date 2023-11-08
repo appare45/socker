@@ -1,9 +1,11 @@
 use clap::{Parser, Subcommand};
 use clone::new_uts;
+use mount::mount_bind;
 use parse::Config;
 use ps::ps;
 
 mod clone;
+mod mount;
 mod parse;
 mod ps;
 
@@ -20,6 +22,10 @@ enum Commands {
     Ps {
         #[arg(short)]
         all: Option<bool>,
+    },
+    Mount {
+        src: String,
+        to: String,
     },
 }
 
@@ -40,6 +46,7 @@ fn main() {
         Some(Commands::Clone) => {
             new_uts();
         }
+        Some(Commands::Mount { src, to }) => mount_bind(src, to),
         _ => {
             eprint!("Unexpected command")
         }
