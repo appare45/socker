@@ -1,6 +1,8 @@
+use std::path::Path;
+
 use clap::{Parser, Subcommand};
 use clone::new_uts;
-use mount::mount_bind;
+use mount::mount::mount_bind;
 use parse::Config;
 use ps::ps;
 
@@ -46,7 +48,7 @@ fn main() {
         Some(Commands::Clone) => {
             new_uts();
         }
-        Some(Commands::Mount { src, to }) => mount_bind(src, to),
+        Some(Commands::Mount { src, to }) => mount_bind(Path::new(src), Path::new(to)),
         _ => {
             eprint!("Unexpected command")
         }
