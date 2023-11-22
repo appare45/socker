@@ -2,7 +2,7 @@ use nix::{
     libc::{self, SIGCHLD},
     sched::{clone, CloneFlags},
     sys::wait::waitpid,
-    unistd::{chroot, execvp},
+    unistd::{chroot, execvp, chdir},
 };
 
 use crate::mount::mount::mount_bind;
@@ -21,6 +21,7 @@ pub fn new_uts() {
         mount_bind(src, root);
         println!("new root from: {}", root.display());
         chroot(root).unwrap();
+        chdir("/").unwrap();
         let cmd = CString::new("bash").unwrap();
         let args = vec![CString::new("containered bash").unwrap()];
         match execvp(&cmd, &args) {
