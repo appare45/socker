@@ -1,3 +1,5 @@
 app/target
 test-container/rootfs
 test-container/script
+app/debian
+tmp
