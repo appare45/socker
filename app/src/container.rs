@@ -1,5 +1,6 @@
 use crate::config_parser::Config;
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
+use log::info;
 use nix::{
     sched::{unshare, CloneFlags},
     sys::wait::waitpid,
@@ -32,7 +33,7 @@ impl Container {
         self.status = ContainerStatus::Running;
         match unsafe { fork() } {
             Ok(ForkResult::Parent { child, .. }) => {
-                println!("Container has been started with pid: {}", child);
+                info!("Container has been started with pid: {}", child);
                 self.pid = Some(child);
                 waitpid(child, None).unwrap();
                 Ok(())
@@ -42,18 +43,20 @@ impl Container {
                 write(0, "I'm a container \n".as_bytes()).ok();
                 match self.config.process {
                     Some(ref process) => {
+                        // ToDo: Move to process's method
                         let cwd = process.get_cwd();
                         let args = process.get_args();
                         let env = process.get_env();
-                        execve(cwd, args[..].as_ref(), env[..].as_ref())?;
-                        // unshare(CloneFlags::CLONE_NEWNS)?;
                         unsafe {
                             libc::chdir(cwd.as_ptr());
                         }
+                        execve(cwd, args[..].as_ref(), env[..].as_ref())
+                            .context("Failed to run process")?;
+                        // unshare(CloneFlags::CLONE_NEWNS)?;
                     }
                     None => {}
                 }
-                unshare(CloneFlags::CLONE_NEWNS)?;
+                unshare(CloneFlags::CLONE_NEWNS).context("Failed to unshare")?;
                 unsafe { libc::_exit(0) };
             }
             Err(_) => bail!("Failed to fork"),
