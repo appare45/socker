@@ -1,10 +1,20 @@
 use anyhow::{Context, Result};
 use serde::Deserialize;
 
+use crate::process::Process;
+
 #[derive(Deserialize)]
 pub struct Config {
     #[serde(rename = "ociVersion")]
     pub oci_version: String,
+    pub root: Option<Root>,
+    pub process: Option<Process>,
+}
+
+#[derive(Deserialize)]
+pub struct Root {
+    pub path: String,
+    pub readonly: bool,
 }
 
 impl TryFrom<&str> for Config {
