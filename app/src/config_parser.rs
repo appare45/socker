@@ -16,14 +16,11 @@ impl TryFrom<&str> for Config {
     }
 }
 
-mod test {
-    use super::Config;
-    #[test]
-    fn parser() {
-        let data = r#"{
+#[test]
+fn parser() {
+    let data = r#"{
             "ociVersion": "1.0.0"
         }"#;
-        let config = Config::try_from(data).unwrap();
-        assert_eq!(config.oci_version, "1.0.0");
-    }
+    let config = Config::try_from(data).unwrap();
+    assert_eq!(config.oci_version, "1.0.0");
 }
