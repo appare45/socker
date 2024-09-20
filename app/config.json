@@ -6,17 +6,35 @@
       "uid": 0,
       "gid": 0
     },
-    "args": ["sh"],
+    "args": [
+      "/bin/sh"
+    ],
     "env": [
       "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
       "TERM=xterm"
     ],
     "cwd": "/",
     "capabilities": {
-      "bounding": ["CAP_AUDIT_WRITE", "CAP_KILL", "CAP_NET_BIND_SERVICE"],
-      "effective": ["CAP_AUDIT_WRITE", "CAP_KILL", "CAP_NET_BIND_SERVICE"],
-      "permitted": ["CAP_AUDIT_WRITE", "CAP_KILL", "CAP_NET_BIND_SERVICE"],
-      "ambient": ["CAP_AUDIT_WRITE", "CAP_KILL", "CAP_NET_BIND_SERVICE"]
+      "bounding": [
+        "CAP_AUDIT_WRITE",
+        "CAP_KILL",
+        "CAP_NET_BIND_SERVICE"
+      ],
+      "effective": [
+        "CAP_AUDIT_WRITE",
+        "CAP_KILL",
+        "CAP_NET_BIND_SERVICE"
+      ],
+      "permitted": [
+        "CAP_AUDIT_WRITE",
+        "CAP_KILL",
+        "CAP_NET_BIND_SERVICE"
+      ],
+      "ambient": [
+        "CAP_AUDIT_WRITE",
+        "CAP_KILL",
+        "CAP_NET_BIND_SERVICE"
+      ]
     },
     "rlimits": [
       {
@@ -42,7 +60,12 @@
       "destination": "/dev",
       "type": "tmpfs",
       "source": "tmpfs",
-      "options": ["nosuid", "strictatime", "mode=755", "size=65536k"]
+      "options": [
+        "nosuid",
+        "strictatime",
+        "mode=755",
+        "size=65536k"
+      ]
     },
     {
       "destination": "/dev/pts",
@@ -61,25 +84,46 @@
       "destination": "/dev/shm",
       "type": "tmpfs",
       "source": "shm",
-      "options": ["nosuid", "noexec", "nodev", "mode=1777", "size=65536k"]
+      "options": [
+        "nosuid",
+        "noexec",
+        "nodev",
+        "mode=1777",
+        "size=65536k"
+      ]
     },
     {
       "destination": "/dev/mqueue",
       "type": "mqueue",
       "source": "mqueue",
-      "options": ["nosuid", "noexec", "nodev"]
+      "options": [
+        "nosuid",
+        "noexec",
+        "nodev"
+      ]
     },
     {
       "destination": "/sys",
       "type": "sysfs",
       "source": "sysfs",
-      "options": ["nosuid", "noexec", "nodev", "ro"]
+      "options": [
+        "nosuid",
+        "noexec",
+        "nodev",
+        "ro"
+      ]
     },
     {
       "destination": "/sys/fs/cgroup",
       "type": "cgroup",
       "source": "cgroup",
-      "options": ["nosuid", "noexec", "nodev", "relatime", "ro"]
+      "options": [
+        "nosuid",
+        "noexec",
+        "nodev",
+        "relatime",
+        "ro"
+      ]
     }
   ],
   "linux": {

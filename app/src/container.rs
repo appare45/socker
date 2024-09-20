@@ -4,7 +4,7 @@ use log::info;
 use nix::{
     sched::{unshare, CloneFlags},
     sys::wait::waitpid,
-    unistd::{execve, fork, write, ForkResult, Pid},
+    unistd::{execvpe, fork, write, ForkResult, Pid},
 };
 
 // not implemented all variantes
@@ -49,10 +49,7 @@ impl Container {
                     let cwd = process.get_cwd();
                     let args = process.get_args();
                     let env = process.get_env();
-                    unsafe {
-                        libc::chdir(cwd.as_ptr());
-                    }
-                    execve(cwd, args[..].as_ref(), env[..].as_ref())
+                    execvpe(cwd, args[..].as_ref(), env[..].as_ref())
                         .context("Failed to run process")?;
                     // unshare(CloneFlags::CLONE_NEWNS)?;
                 }

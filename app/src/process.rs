@@ -11,12 +11,13 @@ pub struct Process {
 
 impl Process {
     pub fn get_cwd(&self) -> &CStr {
-        unsafe { CStr::from_ptr(self.cwd.as_ptr() as *const i8) }
+        match self.args {
+            Some(ref args) => unsafe { CStr::from_ptr(args[0].as_ptr() as *const i8) },
+            None => unsafe { CStr::from_ptr(self.cwd.as_ptr() as *const i8) },
+        }
     }
     pub fn get_args(&self) -> Vec<&CStr> {
-        self.args
-            .clone()
-            .unwrap_or(Vec::new())
+        self.args.clone().unwrap_or(Vec::new())[1..]
             .iter()
             .map(|s| unsafe { CStr::from_ptr(s.as_ptr() as *const i8) })
             .collect::<Vec<&CStr>>()

@@ -1,14 +1,14 @@
 use anyhow::{ensure, Context, Result};
 use log::debug;
 use nix::{
-    mount::{mount, umount, MsFlags},
+    mount::{mount, umount2, MntFlags, MsFlags},
     sched::{unshare, CloneFlags},
     unistd::{chdir, pivot_root},
 };
 use serde::Deserialize;
 use std::{
     env::temp_dir,
-    fs::{create_dir, remove_dir_all},
+    fs::{create_dir, remove_dir, remove_dir_all},
     path::{Path, PathBuf},
 };
 
@@ -35,10 +35,10 @@ impl Root {
         create_dir(tmp_path.to_path_buf()).context("Creating temp dir for mounting root failed")?;
         debug!("Mounting {} to {}", root_path.display(), tmp_path.display());
         mount::<str, str, str, str>(
-            None,
+            Some("none"),
             "/",
-            Some(""),
-            MsFlags::MS_SLAVE | MsFlags::MS_REC,
+            None,
+            MsFlags::MS_PRIVATE | MsFlags::MS_REC,
             None,
         )
         .context("Failed to make rootfs private")?;
@@ -63,9 +63,16 @@ impl Root {
         chdir(&self.tmp_path().to_path_buf()).context("Failed to change root dir")?;
         const OLD_ROOT: &str = "old_root";
         let old_root = self.tmp_path().join(OLD_ROOT);
-        create_dir(&old_root).context("Failed to create old root dir")?;
+        if !old_root.exists() {
+            create_dir(&old_root).context("Failed to create old root dir")?;
+        }
         unshare(CloneFlags::CLONE_NEWNS).context("Failed to unshare")?;
-        pivot_root::<str, PathBuf>(".", &old_root).context("Failed to pivot root")?;
+        pivot_root::<PathBuf, PathBuf>(&self.tmp_path(), &old_root)
+            .context("Failed to pivot root")?;
+        mount::<str, str, str, str>(Some("proc"), "/proc", Some("proc"), MsFlags::empty(), None)
+            .context("Failed to mount /proc")?;
+        umount2(OLD_ROOT, MntFlags::MNT_DETACH).context("Failed to unmount old root")?;
+        remove_dir(OLD_ROOT).context("Failed to remove old root dir")?;
         Ok(())
     }
 }
@@ -73,8 +80,9 @@ impl Root {
 impl Drop for Root {
     fn drop(&mut self) {
         if self.tmp_path().exists() {
-            // umount(&self.tmp_path().to_path_buf()).expect("Failed to unmount rootfs");
-            // remove_dir_all(self.tmp_path().to_path_buf()).expect("Failed to remove tmp dir");
+            umount2(&self.tmp_path().to_path_buf(), MntFlags::MNT_DETACH)
+                .expect("Failed to unmount rootfs");
+            remove_dir_all(self.tmp_path().to_path_buf()).expect("Failed to remove tmp dir");
         }
         debug!("Root service has been stopped");
     }
