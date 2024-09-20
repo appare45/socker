@@ -4,7 +4,7 @@ use log::info;
 use nix::{
     sched::{unshare, CloneFlags},
     sys::wait::waitpid,
-    unistd::{execvpe, fork, write, ForkResult, Pid},
+    unistd::{fork, write, ForkResult, Pid},
 };
 
 // not implemented all variantes
@@ -45,15 +45,8 @@ impl Container {
                     root.pivot()?;
                 }
                 if let Some(process) = &self.config.process {
-                    // ToDo: Move to process's method
-                    let cwd = process.get_cwd();
-                    let args = process.get_args();
-                    let env = process.get_env();
-                    execvpe(cwd, args[..].as_ref(), env[..].as_ref())
-                        .context("Failed to run process")?;
-                    // unshare(CloneFlags::CLONE_NEWNS)?;
+                    process.run()?;
                 }
-
                 unshare(CloneFlags::CLONE_NEWNS).context("Failed to unshare")?;
                 unsafe { libc::_exit(0) };
             }

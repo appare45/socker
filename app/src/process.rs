@@ -1,3 +1,5 @@
+use anyhow::{Context, Ok, Result};
+use nix::unistd::execvpe;
 use serde::Deserialize;
 use std::ffi::CStr;
 
@@ -10,24 +12,33 @@ pub struct Process {
 }
 
 impl Process {
-    pub fn get_cwd(&self) -> &CStr {
+    fn get_cmd(&self) -> &CStr {
         match self.args {
             Some(ref args) => unsafe { CStr::from_ptr(args[0].as_ptr() as *const i8) },
             None => unsafe { CStr::from_ptr(self.cwd.as_ptr() as *const i8) },
         }
     }
-    pub fn get_args(&self) -> Vec<&CStr> {
+    fn get_args(&self) -> Vec<&CStr> {
         self.args.clone().unwrap_or(Vec::new())[1..]
             .iter()
             .map(|s| unsafe { CStr::from_ptr(s.as_ptr() as *const i8) })
             .collect::<Vec<&CStr>>()
     }
-    pub fn get_env(&self) -> Vec<&CStr> {
+    fn get_env(&self) -> Vec<&CStr> {
         self.env
             .clone()
             .unwrap_or(Vec::new())
             .iter()
             .map(|s| unsafe { CStr::from_ptr(s.as_ptr() as *const i8) })
             .collect::<Vec<&CStr>>()
+    }
+    pub fn run(&self) -> Result<()> {
+        {
+            let cwd = self.get_cmd();
+            let args = self.get_args();
+            let env = self.get_env();
+            execvpe(cwd, args[..].as_ref(), env[..].as_ref()).context("Failed to run process")?;
+            Ok(())
+        }
     }
 }
