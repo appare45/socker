@@ -41,21 +41,22 @@ impl Container {
             Ok(ForkResult::Child) => {
                 // Unsafe to use `println!` (or `unwrap`) here. See Safety.
                 write(0, "I'm a container \n".as_bytes()).ok();
-                match self.config.process {
-                    Some(ref process) => {
-                        // ToDo: Move to process's method
-                        let cwd = process.get_cwd();
-                        let args = process.get_args();
-                        let env = process.get_env();
-                        unsafe {
-                            libc::chdir(cwd.as_ptr());
-                        }
-                        execve(cwd, args[..].as_ref(), env[..].as_ref())
-                            .context("Failed to run process")?;
-                        // unshare(CloneFlags::CLONE_NEWNS)?;
-                    }
-                    None => {}
+                if let Some(ref root) = self.config.root {
+                    root.pivot()?;
                 }
+                if let Some(process) = &self.config.process {
+                    // ToDo: Move to process's method
+                    let cwd = process.get_cwd();
+                    let args = process.get_args();
+                    let env = process.get_env();
+                    unsafe {
+                        libc::chdir(cwd.as_ptr());
+                    }
+                    execve(cwd, args[..].as_ref(), env[..].as_ref())
+                        .context("Failed to run process")?;
+                    // unshare(CloneFlags::CLONE_NEWNS)?;
+                }
+
                 unshare(CloneFlags::CLONE_NEWNS).context("Failed to unshare")?;
                 unsafe { libc::_exit(0) };
             }
