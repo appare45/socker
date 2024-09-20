@@ -27,6 +27,8 @@ fn run() -> Result<()> {
 fn main() {
     env::set_var("RUST_LOG", "info");
     env_logger::init();
+    #[cfg(not(unix))]
+    panic!("This program only runs on Unix systems");
     match run() {
         Ok(_) => {}
         Err(e) => {
