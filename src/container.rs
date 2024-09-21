@@ -1,8 +1,7 @@
 use crate::config_parser::Config;
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use log::info;
 use nix::{
-    sched::{unshare, CloneFlags},
     sys::wait::waitpid,
     unistd::{fork, write, ForkResult, Pid},
 };
@@ -44,10 +43,12 @@ impl Container {
                 if let Some(ref root) = self.config.root {
                     root.pivot()?;
                 }
+                if let Some(hostname) = &self.config.hostname {
+                    hostname.run()?;
+                }
                 if let Some(process) = &self.config.process {
                     process.run()?;
                 }
-                unshare(CloneFlags::CLONE_NEWNS).context("Failed to unshare")?;
                 unsafe { libc::_exit(0) };
             }
             Err(_) => bail!("Failed to fork"),

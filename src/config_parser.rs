@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use serde::Deserialize;
 
+use crate::hostname::Hostname;
 use crate::process::Process;
 use crate::root::Root;
 
@@ -10,6 +11,7 @@ pub struct Config {
     pub oci_version: String,
     pub root: Option<Root>,
     pub process: Option<Process>,
+    pub hostname: Option<Hostname>,
 }
 
 impl TryFrom<&str> for Config {
