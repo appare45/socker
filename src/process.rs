@@ -3,6 +3,8 @@ use nix::unistd::execvpe;
 use serde::Deserialize;
 use std::ffi::CStr;
 
+use crate::container::ContainerTask;
+
 // Terminal is not supported
 #[derive(Deserialize, Clone)]
 pub struct Process {
@@ -32,13 +34,14 @@ impl Process {
             .map(|s| unsafe { CStr::from_ptr(s.as_ptr() as *const i8) })
             .collect::<Vec<&CStr>>()
     }
-    pub fn run(&self) -> Result<()> {
-        {
-            let cwd = self.get_cmd();
-            let args = self.get_args();
-            let env = self.get_env();
-            execvpe(cwd, args[..].as_ref(), env[..].as_ref()).context("Failed to run process")?;
-            Ok(())
-        }
+}
+
+impl ContainerTask for Process {
+    fn run(&self) -> Result<()> {
+        let cwd = self.get_cmd();
+        let args = self.get_args();
+        let env = self.get_env();
+        execvpe(cwd, args[..].as_ref(), env[..].as_ref()).context("Failed to run process")?;
+        Ok(())
     }
 }

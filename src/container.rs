@@ -19,6 +19,10 @@ pub struct Container {
     pid: Option<Pid>,
 }
 
+pub trait ContainerTask {
+    fn run(&self) -> Result<()>;
+}
+
 impl Container {
     pub fn new(config: Config) -> Self {
         Container {
@@ -41,7 +45,7 @@ impl Container {
                 // Unsafe to use `println!` (or `unwrap`) here. See Safety.
                 write(0, "I'm a container \n".as_bytes()).ok();
                 if let Some(ref root) = self.config.root {
-                    root.pivot()?;
+                    root.run()?;
                 }
                 if let Some(hostname) = &self.config.hostname {
                     hostname.run()?;

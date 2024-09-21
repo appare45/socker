@@ -12,6 +12,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::container::ContainerTask;
+
 #[derive(Deserialize)]
 pub struct Root {
     pub path: String,
@@ -73,6 +75,13 @@ impl Root {
             .context("Failed to mount /proc")?;
         umount2(OLD_ROOT, MntFlags::MNT_DETACH).context("Failed to unmount old root")?;
         remove_dir(OLD_ROOT).context("Failed to remove old root dir")?;
+        Ok(())
+    }
+}
+
+impl ContainerTask for Root {
+    fn run(&self) -> Result<()> {
+        self.pivot()?;
         Ok(())
     }
 }
