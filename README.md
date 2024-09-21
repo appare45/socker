@@ -21,3 +21,4 @@ git clone https://github.com/appare45/socker.git
 cd socker
 cargo build --release
 ```
+<img width="1392" alt="image" src="https://github.com/user-attachments/assets/74ca01b8-acb4-446c-a322-5d181a02a5c6">
