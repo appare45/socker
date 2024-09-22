@@ -71,8 +71,6 @@ impl Root {
         unshare(CloneFlags::CLONE_NEWNS).context("Failed to unshare")?;
         pivot_root::<PathBuf, PathBuf>(&self.tmp_path(), &old_root)
             .context("Failed to pivot root")?;
-        mount::<str, str, str, str>(Some("proc"), "/proc", Some("proc"), MsFlags::empty(), None)
-            .context("Failed to mount /proc")?;
         umount2(OLD_ROOT, MntFlags::MNT_DETACH).context("Failed to unmount old root")?;
         remove_dir(OLD_ROOT).context("Failed to remove old root dir")?;
         Ok(())

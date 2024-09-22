@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use serde::Deserialize;
 
 use crate::hostname::Hostname;
+use crate::mounts::Mounts;
 use crate::process::Process;
 use crate::root::Root;
 
@@ -12,6 +13,7 @@ pub struct Config {
     pub root: Option<Root>,
     pub process: Option<Process>,
     pub hostname: Option<Hostname>,
+    pub mounts: Option<Vec<Mounts>>,
 }
 
 impl TryFrom<&str> for Config {
