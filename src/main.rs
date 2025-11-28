@@ -2,20 +2,22 @@ use std::{
     fs,
     io::{self, PipeReader, Read, Write},
     os::fd::{AsRawFd, FromRawFd},
+    path::{Path, PathBuf},
 };
 
 use nix::{
     libc::SIGCHLD,
-    unistd::{Gid, Uid, close, setgid, setuid},
+    mount::{MntFlags, MsFlags, mount, umount2},
+    unistd::{Gid, Uid, close, execve, pivot_root, setgid, setuid},
 };
 use socker::namespace::flags::NamespaceFlags;
 
-#[derive(Clone, Copy)]
 struct Context {
     readerfd: i32,
     writerfd: i32,
     uid: Uid,
     gid: Gid,
+    rootfs: Box<Path>,
 }
 
 fn child_fn(ctx: Context) {
@@ -34,24 +36,46 @@ fn child_fn(ctx: Context) {
     let uid = nix::unistd::getuid();
     let gid = nix::unistd::getgid();
     println!("Child UID: {}, GID: {}", uid, gid);
+    if !ctx.rootfs.exists() {
+        panic!("New root directory does not exist");
+    }
+    mount::<str, str, str, str>(None, "/", None, MsFlags::MS_REC | MsFlags::MS_PRIVATE, None)
+        .expect("Failed to remount / as private");
+    mount::<Path, Path, str, str>(Some(&ctx.rootfs), &ctx.rootfs, None, MsFlags::MS_BIND, None)
+        .expect("Failed to bind mount");
+    let old_path = "./old";
+    let put_old = ctx.rootfs.join(old_path);
+    if !put_old.exists() {
+        fs::create_dir(&put_old).expect("Failed to create old directory in new root");
+    }
+    pivot_root::<Path, PathBuf>(&ctx.rootfs, &put_old).expect("Failed to pivot_root");
+    std::env::set_current_dir("/").expect("Failed to chdir to /");
+    umount2(old_path, MntFlags::MNT_DETACH).expect("Failed to unmount /old");
+    fs::remove_dir(old_path).expect("Failed to remove /old");
+    let envs: [&std::ffi::CStr; 0] = [];
+    execve(&c"/bin/sh", &[c"/bin/sh"], &envs).expect("Failed to execve");
+    panic!("Failed to execve");
 }
 const CHILD_STACK_SIZE: usize = 1024 * 1024;
 
 fn main() {
     println!("Hello, world!");
-    let flags = socker::namespace::Namespace::new(NamespaceFlags::USER | NamespaceFlags::PID);
+    let flags = socker::namespace::Namespace::new(
+        NamespaceFlags::USER | NamespaceFlags::PID | NamespaceFlags::MNT,
+    );
     let (reader, mut writer) = io::pipe().expect("Failed to create pipe");
     let stack: &mut [u8; CHILD_STACK_SIZE] = &mut [0; CHILD_STACK_SIZE];
-    let ctx = Context {
+    let mut ctx = Some(Context {
         readerfd: reader.as_raw_fd(),
         writerfd: writer.as_raw_fd(),
         uid: Uid::from_raw(0),
         gid: Gid::from_raw(0),
-    };
+        rootfs: Box::from(Path::new("./rootfs")),
+    });
     let pid = match unsafe {
         nix::sched::clone(
             Box::new(move || {
-                child_fn(ctx);
+                child_fn(ctx.take().unwrap());
                 0
             }),
             stack,
