@@ -5,4 +5,4 @@ edition = "2024"
 
 [dependencies]
 bitflags = "2.4.2"
-nix = { version = "0.30.1", features = ["fs", "sched"] }
+nix = { version = "0.30.1", features = ["fs", "sched", "user"] }
