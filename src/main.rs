@@ -10,19 +10,27 @@ use nix::{
 };
 use socker::namespace::flags::NamespaceFlags;
 
-fn child_fn(readfd: i32, writefd: i32) {
+#[derive(Clone, Copy)]
+struct Context {
+    readerfd: i32,
+    writerfd: i32,
+    uid: Uid,
+    gid: Gid,
+}
+
+fn child_fn(ctx: Context) {
     let pid = nix::unistd::getpid();
     println!("In child process with PID: {}", pid);
-    let mut reader = unsafe { PipeReader::from_raw_fd(readfd) };
-    close(writefd).expect("Failed to close write end of pipe in child");
+    let mut reader = unsafe { PipeReader::from_raw_fd(ctx.readerfd) };
+    close(ctx.writerfd).expect("Failed to close write end of pipe in child");
     let uid = nix::unistd::getuid();
     let gid = nix::unistd::getgid();
     println!("Child before mapping UID: {}, GID: {}", uid, gid);
     let mut read = [0_u8; 128];
     reader.read(&mut read).unwrap();
     println!("Read: {}", String::from_utf8_lossy(&read));
-    setuid(Uid::from_raw(0)).expect("Failed to set UID to 0");
-    setgid(Gid::from_raw(0)).expect("Failed to set GID to 0");
+    setuid(ctx.uid).expect("Failed to set UID to 0");
+    setgid(ctx.gid).expect("Failed to set GID to 0");
     let uid = nix::unistd::getuid();
     let gid = nix::unistd::getgid();
     println!("Child UID: {}, GID: {}", uid, gid);
@@ -34,10 +42,16 @@ fn main() {
     let flags = socker::namespace::Namespace::new(NamespaceFlags::USER | NamespaceFlags::PID);
     let (reader, mut writer) = io::pipe().expect("Failed to create pipe");
     let stack: &mut [u8; CHILD_STACK_SIZE] = &mut [0; CHILD_STACK_SIZE];
+    let ctx = Context {
+        readerfd: reader.as_raw_fd(),
+        writerfd: writer.as_raw_fd(),
+        uid: Uid::from_raw(0),
+        gid: Gid::from_raw(0),
+    };
     let pid = match unsafe {
         nix::sched::clone(
-            Box::new(|| {
-                child_fn(reader.as_raw_fd(), writer.as_raw_fd());
+            Box::new(move || {
+                child_fn(ctx);
                 0
             }),
             stack,
